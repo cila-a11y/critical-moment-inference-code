@@ -1,0 +1,3 @@
+"role","segment","n","n_positive","positive_rate","mean_spend","sd_spend","median_spend","conditional_mean_positive","maximum_spend"
+"X","No E-Mail",21306,122,0.00572608654839013,0.652789355111236,11.5881996812715,0,114.002704918033,499
+"Y","Mens E-Mail",21307,267,0.0125310930680058,1.42261651100577,17.7542051037368,0,113.526928838951,499

@@ -1,0 +1,6 @@
+observed_rare_draws,replications,band_coverage,false_report_rate
+0,8,0.000,1.000
+1,66,0.000,0.985
+2,174,0.264,0.339
+3--5,1032,0.991,0.005
+6 or more,752,0.973,0.008

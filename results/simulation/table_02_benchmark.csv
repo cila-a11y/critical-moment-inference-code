@@ -1,0 +1,11 @@
+design,n_x_equals_n_y,K1_band_coverage,K2_band_coverage,K3_band_coverage,K1_false_report_rate,K2_false_report_rate,K3_false_report_rate
+Lognormal equality,50,0.947,0.947,0.947,0.053,0.053,0.053
+Lognormal equality,100,0.952,0.953,0.951,0.048,0.047,0.048
+Lognormal equality,250,0.948,0.949,0.948,0.051,0.050,0.050
+Lognormal equality,500,0.946,0.946,0.946,0.053,0.053,0.054
+Lognormal no root,50,0.930,0.922,0.903,0.000,0.000,0.000
+Lognormal no root,100,0.949,0.944,0.933,0.000,0.000,0.000
+Lognormal no root,250,0.949,0.944,0.935,0.000,0.000,0.000
+Lognormal no root,500,0.950,0.948,0.938,0.000,0.000,0.000
+"Mixed sign, joint",100,0.944,0.944,0.944,0.046,0.045,0.045
+"Mixed sign, joint",250,0.945,0.946,0.947,0.043,0.041,0.041

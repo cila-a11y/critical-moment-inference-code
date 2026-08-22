@@ -1,0 +1,9 @@
+role,mechanism,population_feature,sample_sizes_nx_equals_ny,interval_numbers
+Benchmark,Lognormal equality,identical absolute-moment curves,"50, 100, 250, 500",1--3
+Benchmark,Lognormal no root,no positive root; budget 0,"50, 100, 250, 500",1--3
+Benchmark,Mixed sign,absolute equality; signed root 1 (up); budget 1,"100, 250",1--3
+Power,Lognormal upcrossing,root 4/3 (up); moderate or weak signal; budget 1,"100, 250, 500, 1000",1--3
+Power,Rare-tail upcrossing,root 1 (up); mixture probability 0.05; budget 1,"100, 250, 500, 1000",1--3
+Power,Selected tangency,"root 0.6, multiplicity 2, no sign change; budget 2","2000, 4000, 8000",1
+Power,Selected two-root design,roots 0.75 (down) and 1.75 (up); budget 2,"2000, 4000, 8000",3
+Challenging,"High variance, sparse tails, Pareto, weak separation","equality, no root, one root, tangency, or two roots",100--1000; some unequal sizes,1--3

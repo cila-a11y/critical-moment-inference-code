@@ -1,0 +1,13 @@
+design,n_x_equals_n_y,reports,report_rate,coverage_conditional_on_report,report_and_cover_rate,bias_conditional_on_isolation,rmse_conditional_on_isolation,length_conditional_on_report
+Moderate lognormal,100,1071,0.527,1.000,0.527,-0.001,0.323,3.160
+Moderate lognormal,250,1516,0.746,1.000,0.746,-0.010,0.295,1.967
+Moderate lognormal,500,1805,0.888,1.000,0.888,-0.007,0.280,1.401
+Moderate lognormal,1000,1974,0.971,0.976,0.948,-0.007,0.231,0.988
+Weak lognormal,100,390,0.192,1.000,0.192,-0.052,0.336,8.651
+Weak lognormal,250,486,0.239,1.000,0.239,-0.029,0.318,6.358
+Weak lognormal,500,593,0.292,1.000,0.292,-0.060,0.331,5.202
+Weak lognormal,1000,775,0.381,1.000,0.381,-0.062,0.321,3.990
+"Rare-tail, pi=.05",100,1445,0.711,1.000,0.711,-0.014,0.253,1.688
+"Rare-tail, pi=.05",250,1830,0.901,1.000,0.901,-0.004,0.216,1.065
+"Rare-tail, pi=.05",500,1992,0.980,0.976,0.957,0.004,0.179,0.752
+"Rare-tail, pi=.05",1000,2029,0.999,0.950,0.949,0.004,0.136,0.529

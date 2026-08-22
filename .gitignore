@@ -1,0 +1,8 @@
+/data/
+/generated/
+/main_final_v003_replication_results.rds
+.DS_Store
+.Rhistory
+.RData
+__pycache__/
+*.pyc
