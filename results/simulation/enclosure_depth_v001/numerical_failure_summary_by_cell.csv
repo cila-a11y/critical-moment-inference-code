@@ -1,0 +1,13 @@
+"study_id","cell_id","cell_class","variant_id","scenario_id","n_x","n_y","expected_units","successful_units","numerical_failure_units","numerical_failure_rate"
+"enclosure_depth_v001","ED1_001_TANGENCY_SV_POWER_n2000_depth6_reference","diagnostic","depth6_reference","TANGENCY_SV_POWER",2000,2000,254,254,0,0
+"enclosure_depth_v001","ED1_002_TANGENCY_SV_POWER_n2000_depth8_refined","diagnostic","depth8_refined","TANGENCY_SV_POWER",2000,2000,254,254,0,0
+"enclosure_depth_v001","ED1_003_TANGENCY_SV_POWER_n4000_depth6_reference","diagnostic","depth6_reference","TANGENCY_SV_POWER",4000,4000,254,254,0,0
+"enclosure_depth_v001","ED1_004_TANGENCY_SV_POWER_n4000_depth8_refined","diagnostic","depth8_refined","TANGENCY_SV_POWER",4000,4000,254,254,0,0
+"enclosure_depth_v001","ED1_005_TANGENCY_SV_POWER_n8000_depth6_reference","diagnostic","depth6_reference","TANGENCY_SV_POWER",8000,8000,254,254,0,0
+"enclosure_depth_v001","ED1_006_TANGENCY_SV_POWER_n8000_depth8_refined","diagnostic","depth8_refined","TANGENCY_SV_POWER",8000,8000,254,254,0,0
+"enclosure_depth_v001","ED1_007_TWO_ROOT_SV_POWER_n2000_depth6_reference","diagnostic","depth6_reference","TWO_ROOT_SV_POWER",2000,2000,254,254,0,0
+"enclosure_depth_v001","ED1_008_TWO_ROOT_SV_POWER_n2000_depth8_refined","diagnostic","depth8_refined","TWO_ROOT_SV_POWER",2000,2000,254,254,0,0
+"enclosure_depth_v001","ED1_009_TWO_ROOT_SV_POWER_n4000_depth6_reference","diagnostic","depth6_reference","TWO_ROOT_SV_POWER",4000,4000,254,254,0,0
+"enclosure_depth_v001","ED1_010_TWO_ROOT_SV_POWER_n4000_depth8_refined","diagnostic","depth8_refined","TWO_ROOT_SV_POWER",4000,4000,254,254,0,0
+"enclosure_depth_v001","ED1_011_TWO_ROOT_SV_POWER_n8000_depth6_reference","diagnostic","depth6_reference","TWO_ROOT_SV_POWER",8000,8000,254,254,0,0
+"enclosure_depth_v001","ED1_012_TWO_ROOT_SV_POWER_n8000_depth8_refined","diagnostic","depth8_refined","TWO_ROOT_SV_POWER",8000,8000,254,254,0,0

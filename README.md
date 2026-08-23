@@ -65,6 +65,29 @@ The full run comprises 48 resumable tasks and writes checkpoints only under
 integer from 1 through 48, and finally
 `bash scripts/run_full_simulation.sh finalize`.
 
+## Verify and reaggregate the enclosure-depth audit
+
+The frozen fully paired audit compares maximum continuum-enclosure depths six
+and eight while keeping the relative-variance guard at depth six. It contains
+1,524 independent pairs, corresponding to 3,048 variant evaluations. Its
+scientific and numerical invariants can be checked without R:
+
+```sh
+make verify-depth
+```
+
+The committed replication-level asset is 405,328 bytes and has SHA-256
+`f66e1ba64b37c8f76b2f30ebef554187e68c8cfcf555d8bbe04d4e2f7ee27ecd`.
+With R 4.4.2, reaggregate the frozen rows and compare every historical output
+field against the committed results with:
+
+```sh
+make reproduce-depth
+```
+
+The exact configuration and a concise account of the audit are stored with
+the frozen results under `results/simulation/enclosure_depth_v001/`.
+
 ## Reproduce Table 6 and Figure 3
 
 The Hillstrom CSV is not redistributed because no formal upstream
@@ -88,9 +111,9 @@ committed references in `results/hillstrom/`.
 
 ## Contents
 
-- `simulation/`: simulation engine and locked `main_final_v003` design;
+- `simulation/`: simulation engine and locked main and enclosure-depth designs;
 - `application/`: locked Hillstrom application;
-- `inputs/simulation/`: aggregate inputs for the fast rebuild;
+- `inputs/simulation/`: aggregate inputs and frozen replication-level depth audit;
 - `results/`: reference tables and figures;
 - `scripts/`: verification and reproduction entry points.
 
