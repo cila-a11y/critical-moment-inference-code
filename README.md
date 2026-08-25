@@ -2,8 +2,8 @@
 
 This repository contains the code, locked configurations, aggregate reference
 inputs, and reference outputs needed to reproduce the numerical tables and
-figures in *Inference for critical moment orders under tail-crossing
-constraints*.
+figures in *Simultaneous nonparametric inference for critical moment orders
+under prespecified tail-crossing bounds*.
 
 ## Requirements
 
@@ -108,6 +108,29 @@ The application compares the `No E-Mail` and `Mens E-Mail` groups, runs the
 locked 9,999-repetition simultaneous multiplier procedure, reconstructs the
 continuum enclosure, and checks the generated scientific files against the
 committed references in `results/hillstrom/`.
+
+### Rebuild the manuscript-specific Figure 3
+
+The JNS manuscript uses a presentation-only vector redraw of Figure 3. It is
+built from the already committed `results/hillstrom/moment_band.csv`; no data
+or numerical result is recomputed. From the repository root, run:
+
+```sh
+make figure3-jns
+```
+
+The rebuilt file is written to
+`generated/jns_figure03/figures/figure_03_hillstrom_moment_contrast_jns.pdf`.
+The exact vector file embedded in the submitted manuscript is frozen at
+`results/hillstrom/figure_03_hillstrom_moment_contrast_jns.pdf`, and the exact
+historical plotting script is `scripts/build_figure03_jns.R`. The frozen PDF
+has SHA-256
+`9ba4216292a2b086974526728052b7e8fa205197d526b2769988b2cdcf55cc73`.
+
+The rebuilt PDF can differ byte for byte because Cairo records its version and
+creation time in PDF metadata. The plotted values and presentation are fixed
+by the committed CSV and script; `make verify` checks the frozen manuscript
+artifact byte for byte through `SHA256SUMS.txt`.
 
 ## Contents
 

@@ -4,7 +4,7 @@ ASSET ?= main_final_v003_replication_results.rds
 DATA ?= data/hillstrom_2008_raw.csv
 SOURCE ?=
 
-.PHONY: verify verify-depth rebuild reproduce reproduce-depth simulate data hillstrom
+.PHONY: verify verify-depth rebuild reproduce reproduce-depth simulate data hillstrom figure3-jns
 
 verify:
 	python3 scripts/verify.py
@@ -30,3 +30,9 @@ data:
 
 hillstrom:
 	bash scripts/run_hillstrom.sh "$(DATA)"
+
+figure3-jns:
+	mkdir -p generated/jns_figure03/figures
+	cp results/hillstrom/moment_band.csv generated/jns_figure03/moment_band.csv
+	Rscript --vanilla scripts/build_figure03_jns.R generated/jns_figure03
+	test -s generated/jns_figure03/figures/figure_03_hillstrom_moment_contrast_jns.pdf
