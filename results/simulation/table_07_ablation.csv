@@ -1,0 +1,6 @@
+panel,cell_id,design,n_x_equals_n_y,quantity,denominator,continuum_successes,continuum_simultaneous,grid_simultaneous_successes,grid_simultaneous,grid_pointwise_successes,grid_pointwise
+A,M004_LN_EQUAL_n500,LN-EQUAL,500,Curve coverage,2032,1922,0.946,1923,0.946,1886,0.928
+A,M008_LN_NO_ROOT_n500,LN-NO-ROOT,500,Curve coverage,2032,1905,0.938,1907,0.938,1827,0.899
+A,M052_TWO_ROOT_SV_POWER_n2000,SELECTED-TWO-ROOT,2000,Curve coverage,2032,1939,0.954,1939,0.954,1844,0.907
+B,M008_LN_NO_ROOT_n500,LN-NO-ROOT,500,No root,2032,1614,0.794,1614,0.794,1727,0.850
+B,M052_TWO_ROOT_SV_POWER_n2000,SELECTED-TWO-ROOT,2000,Reversal,2032,863,0.425,863,0.425,1054,0.519

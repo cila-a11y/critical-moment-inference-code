@@ -2,8 +2,8 @@
 
 This repository contains the code, locked configurations, aggregate reference
 inputs, and reference outputs needed to reproduce the numerical tables and
-figures in *Simultaneous nonparametric inference for critical moment orders
-under prespecified tail-crossing bounds*.
+figures in *Simultaneous nonparametric inference and structural root-count
+certification for critical moment orders*.
 
 ## Requirements
 
@@ -27,31 +27,47 @@ This checks every committed file against `SHA256SUMS.txt`, rejects private or
 unexpected artifacts, and verifies the locked simulation and application
 contracts.
 
-## Rebuild Tables 1--5 and Figures 1--2
+## Simulation materials for Tables 1--7 and Figures 1--2
 
-The fast rebuild uses the committed aggregate simulation inputs:
+Tables 1 and 2 describe the data-generating mechanisms and the locked Monte
+Carlo cell catalogue specified in `simulation/R/dgp.R` and
+`simulation/config/main_final_v003.R`. The fast rebuild uses the committed
+aggregate inputs to regenerate the numerical source files for Tables 3--7
+and Figures 1--2:
 
 ```sh
 make rebuild
 ```
 
-Outputs are written to `generated/rebuild/` and checked against the committed
-table data. PNG rendering is checked at the locked dimensions of
-1800 by 1400 pixels.
+Outputs are written to `generated/rebuild/`. Table values are checked against
+the committed references. The stable pipeline filenames map to the manuscript
+as follows:
 
-For an independent reaggregation, download the release asset
-`main_final_v003_replication_results.rds` from release `v1.0.0` into the
-repository root, then run:
+- `table_02_benchmark.csv`: Table 3;
+- `table_03_root_inference.csv`: Table 4;
+- `table_04_special_power.csv`: Table 5;
+- `table_05_tail_strata.csv`: Table 6;
+- `table_07_ablation.csv`: Table 7.
+
+`table_01_design.csv` is a compact design summary. PNG rendering is checked
+at the locked dimensions of 1800 by 1400 pixels.
+
+For an independent reaggregation, download
+`main_final_v003_replication_results.rds`, which is intentionally stored in
+release `v1.0.0`, into the repository root, then run:
 
 ```sh
-gh release download v1.0.0 --pattern main_final_v003_replication_results.rds
+gh release download v1.0.0 \
+  --repo cila-a11y/critical-moment-inference-code \
+  --pattern main_final_v003_replication_results.rds
 make reproduce
 ```
 
 The asset contains 284,480 replication-level result rows, is 36,063,100 bytes,
 and has SHA-256
 `eabac798fb2da2a126203d965e5de41012af7aad3b74358ee70302b8dd35606b`.
-The script verifies these facts before reading it.
+Later source releases do not duplicate this asset. The script verifies its
+row count, byte count, and digest before reading it.
 
 To rerun all 109,728 Monte Carlo units under the locked design:
 
@@ -88,7 +104,7 @@ make reproduce-depth
 The exact configuration and a concise account of the audit are stored with
 the frozen results under `results/simulation/enclosure_depth_v001/`.
 
-## Reproduce Table 6 and Figure 3
+## Reproduce Table 8 and Figure 3
 
 The Hillstrom CSV is not redistributed because no formal upstream
 redistribution licence was located. The acquisition script downloads or
@@ -108,6 +124,8 @@ The application compares the `No E-Mail` and `Mens E-Mail` groups, runs the
 locked 9,999-repetition simultaneous multiplier procedure, reconstructs the
 continuum enclosure, and checks the generated scientific files against the
 committed references in `results/hillstrom/`.
+The stable pipeline file `table_06_hillstrom_application.csv` contains the
+source values for manuscript Table 8.
 
 ### Rebuild the manuscript-specific Figure 3
 

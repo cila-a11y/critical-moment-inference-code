@@ -86,6 +86,8 @@ table_01 <- data.frame(
 
 summary <- read_csv(summary_directory, "summary.csv")
 stopifnot(nrow(summary) == 140L)
+binary <- read_csv(summary_directory, "binary_metrics.csv")
+stopifnot(nrow(binary) == 14980L)
 benchmark_spec <- data.frame(
   scenario_id = c("LN_EQUAL", "LN_NO_ROOT", "MIXED_SIGN"),
   design = c("Lognormal equality", "Lognormal no root", "Mixed sign, joint"),
@@ -253,9 +255,92 @@ table_05 <- data.frame(
   stringsAsFactors = FALSE
 )
 
+ablation_metric <- function(cell_id, metric) {
+  rows <- binary[
+    binary$cell_id == cell_id &
+      binary$moment_type == "absolute" &
+      binary$interval_id == "K3" &
+      binary$metric == metric,
+    , drop = FALSE
+  ]
+  stopifnot(
+    nrow(rows) == 1L,
+    as.integer(rows$denominator) == 2032L,
+    abs(
+      as.numeric(rows$estimate) -
+        as.integer(rows$successes) / as.integer(rows$denominator)
+    ) <= 1e-14
+  )
+  rows
+}
+
+ablation_spec <- data.frame(
+  panel = c("A", "A", "A", "B", "B"),
+  cell_id = c(
+    "M004_LN_EQUAL_n500",
+    "M008_LN_NO_ROOT_n500",
+    "M052_TWO_ROOT_SV_POWER_n2000",
+    "M008_LN_NO_ROOT_n500",
+    "M052_TWO_ROOT_SV_POWER_n2000"
+  ),
+  design = c(
+    "LN-EQUAL", "LN-NO-ROOT", "SELECTED-TWO-ROOT",
+    "LN-NO-ROOT", "SELECTED-TWO-ROOT"
+  ),
+  n_x_equals_n_y = c(500L, 500L, 2000L, 500L, 2000L),
+  quantity = c(
+    "Curve coverage", "Curve coverage", "Curve coverage",
+    "No root", "Reversal"
+  ),
+  continuum_metric = c(
+    rep("continuum_band_covers_truth", 3L),
+    "continuum_no_root_certified", "reversal_certified"
+  ),
+  simultaneous_grid_metric = c(
+    rep("band_covers_truth_on_grid", 3L),
+    "grid_only_no_root", "grid_only_reversal_certified"
+  ),
+  pointwise_grid_metric = c(
+    rep("pointwise_grid_curve_coverage", 3L),
+    "pointwise_no_root_report", "pointwise_reversal_report"
+  ),
+  stringsAsFactors = FALSE
+)
+
+ablation_rows <- lapply(seq_len(nrow(ablation_spec)), function(index) {
+  spec <- ablation_spec[index, , drop = FALSE]
+  continuum <- ablation_metric(spec$cell_id, spec$continuum_metric)
+  simultaneous_grid <- ablation_metric(
+    spec$cell_id, spec$simultaneous_grid_metric
+  )
+  pointwise_grid <- ablation_metric(spec$cell_id, spec$pointwise_grid_metric)
+  stopifnot(
+    identical(continuum$denominator, simultaneous_grid$denominator),
+    identical(continuum$denominator, pointwise_grid$denominator)
+  )
+  data.frame(
+    panel = spec$panel,
+    cell_id = spec$cell_id,
+    design = spec$design,
+    n_x_equals_n_y = spec$n_x_equals_n_y,
+    quantity = spec$quantity,
+    denominator = as.integer(continuum$denominator),
+    continuum_successes = as.integer(continuum$successes),
+    continuum_simultaneous = format_three(continuum$estimate),
+    grid_simultaneous_successes = as.integer(simultaneous_grid$successes),
+    grid_simultaneous = format_three(simultaneous_grid$estimate),
+    grid_pointwise_successes = as.integer(pointwise_grid$successes),
+    grid_pointwise = format_three(pointwise_grid$estimate),
+    stringsAsFactors = FALSE
+  )
+})
+table_07 <- do.call(rbind, ablation_rows)
+row.names(table_07) <- NULL
+
 write_table(table_01, "table_01_design.csv")
 write_table(table_02, "table_02_benchmark.csv")
 write_table(table_03, "table_03_root_inference.csv")
 write_table(table_04, "table_04_special_power.csv")
 write_table(table_05, "table_05_tail_strata.csv")
-cat("FINAL ARTICLE TABLES 1--5: PASSED\n")
+write_table(table_07, "table_07_ablation.csv")
+cat("FINAL PUBLIC SIMULATION TABLE LAYER: PASSED\n")

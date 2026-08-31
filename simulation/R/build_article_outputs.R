@@ -1082,7 +1082,9 @@ safe_plot_range <- function(values, log_scale = FALSE) {
 }
 
 plot_lines_or_message <- function(x, series, labels, colours, ylab,
-                                  log_axes = "", ylim = NULL) {
+                                  log_axes = "", ylim = NULL,
+                                  x_label = "Effective sample size",
+                                  x_ticks = NULL) {
   keep_series <- vapply(series, function(values) {
     any(is.finite(as.numeric(values)))
   }, logical(1L))
@@ -1101,9 +1103,16 @@ plot_lines_or_message <- function(x, series, labels, colours, ylab,
   point_symbols <- seq.int(16L, length.out = length(series))
   plot(
     x, series[[1L]], type = "b", pch = point_symbols[1L], lwd = 2,
-    col = colours[1L], xlab = "Effective sample size",
-    ylab = ylab, xlim = xlim, ylim = ylim, log = log_axes
+    col = colours[1L], xlab = x_label,
+    ylab = ylab, xlim = xlim, ylim = ylim, log = log_axes,
+    xaxt = if (is.null(x_ticks)) "s" else "n"
   )
+  if (!is.null(x_ticks)) {
+    axis(
+      1, at = x_ticks,
+      labels = format(x_ticks, scientific = FALSE, trim = TRUE)
+    )
+  }
   if (length(series) > 1L) {
     for (index in 2:length(series)) {
       lines(x, series[[index]], type = "b", pch = point_symbols[index],
@@ -1238,7 +1247,8 @@ render_two_root <- function() {
   old_par <- par(no.readonly = TRUE)
   on.exit(par(old_par), add = TRUE)
   par(mfrow = c(1, 2), mar = c(4.2, 4.3, 2.4, 1.0),
-      oma = c(0, 0, 1.8, 0), las = 1)
+      oma = c(2.2, 0, 0.2, 0), las = 1)
+  effective_sample_sizes <- sort(unique(two_root_rows$n_eff))
   plot_lines_or_message(
     two_root_rows$n_eff,
     list(
@@ -1248,7 +1258,8 @@ render_two_root <- function() {
     ),
     c("Joint isolation", "Exact-count certificate", "Report and cover"),
     c("#1b6ca8", "#238b45", "#8c5da5"),
-    "Probability", log_axes = "x", ylim = c(0, 1)
+    "Probability", log_axes = "x", ylim = c(0, 1),
+    x_label = "", x_ticks = effective_sample_sizes
   )
   title("Two roots: structural conclusions")
   plot_lines_or_message(
@@ -1259,11 +1270,14 @@ render_two_root <- function() {
     ),
     c("Wald: coverage | report", "Multiplier: coverage | report"),
     c("#1b6ca8", "#d1495b"),
-    "Probability", log_axes = "x", ylim = c(0, 1)
+    "Probability", log_axes = "x", ylim = c(0, 1),
+    x_label = "", x_ticks = effective_sample_sizes
   )
   title("Conditional coverage by method")
-  mtext("Prespecified isolating intervals; no K-copy averaging",
-        side = 3, outer = TRUE, line = 0.25, cex = 0.82)
+  mtext(
+    expression("Effective sample size, " * N[eff]),
+    side = 1, outer = TRUE, line = 0.7
+  )
 }
 render_atomic_figure("figure_02_two_root_power.pdf", render_two_root)
 render_atomic_figure("figure_02_two_root_power.png", render_two_root)

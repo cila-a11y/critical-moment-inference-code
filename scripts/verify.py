@@ -21,6 +21,7 @@ SIMULATION_FILES = (
     "table_03_root_inference.csv",
     "table_04_special_power.csv",
     "table_05_tail_strata.csv",
+    "table_07_ablation.csv",
 )
 SIMULATION_FIGURES = (
     "figure_01_tangency_contraction.png",
@@ -41,6 +42,7 @@ HILLSTROM_FILES = (
     "bootstrap_suprema.csv",
     "audit_checks.csv",
     "rng_state_hashes.csv",
+    # Frozen pipeline filename; this is manuscript Table 8.
     "table_06_hillstrom_application.csv",
 )
 
@@ -83,6 +85,13 @@ def digest(path: Path) -> str:
 def csv_rows(path: Path) -> list[dict[str, str]]:
     with path.open(newline="", encoding="utf-8") as handle:
         return list(csv.DictReader(handle))
+
+
+def csv_table(path: Path) -> tuple[tuple[str, ...], list[dict[str, str]]]:
+    with path.open(newline="", encoding="utf-8") as handle:
+        reader = csv.DictReader(handle)
+        rows = list(reader)
+        return tuple(reader.fieldnames or ()), rows
 
 
 def manifest_entries(audit: Audit) -> dict[str, str]:
@@ -196,6 +205,7 @@ def verify_simulation(audit: Audit) -> None:
         "table_03_root_inference.csv": 12,
         "table_04_special_power.csv": 6,
         "table_05_tail_strata.csv": 5,
+        "table_07_ablation.csv": 5,
     }
     for name, count in expected_output_rows.items():
         path = output_directory / name
@@ -218,6 +228,41 @@ def verify_simulation(audit: Audit) -> None:
     audit.require(
         sum(int(row["replications"]) for row in tail) == 2032,
         "Tail-stratum replication total changed",
+    )
+
+    ablation = csv_rows(output_directory / "table_07_ablation.csv")
+    audit.require(
+        [(row["panel"], row["cell_id"], row["quantity"]) for row in ablation]
+        == [
+            ("A", "M004_LN_EQUAL_n500", "Curve coverage"),
+            ("A", "M008_LN_NO_ROOT_n500", "Curve coverage"),
+            ("A", "M052_TWO_ROOT_SV_POWER_n2000", "Curve coverage"),
+            ("B", "M008_LN_NO_ROOT_n500", "No root"),
+            ("B", "M052_TWO_ROOT_SV_POWER_n2000", "Reversal"),
+        ],
+        "Ablation rows or order changed",
+    )
+    audit.require(
+        all(row["denominator"] == "2032" for row in ablation),
+        "Ablation denominator changed",
+    )
+    audit.require(
+        [
+            (
+                row["continuum_simultaneous"],
+                row["grid_simultaneous"],
+                row["grid_pointwise"],
+            )
+            for row in ablation
+        ]
+        == [
+            ("0.946", "0.946", "0.928"),
+            ("0.938", "0.938", "0.899"),
+            ("0.954", "0.954", "0.907"),
+            ("0.794", "0.794", "0.850"),
+            ("0.425", "0.425", "0.519"),
+        ],
+        "Ablation estimates changed",
     )
 
 
@@ -286,10 +331,17 @@ def verify_hillstrom(audit: Audit) -> None:
         [int(row["replication"]) for row in bootstrap] == list(range(1, 10000)),
         "Hillstrom bootstrap indices changed",
     )
-    figure = directory / "figure_03_hillstrom_moment_contrast.pdf"
-    audit.require(figure.is_file(), "Hillstrom figure is missing")
-    if figure.is_file():
-        audit.require(figure.read_bytes()[:4] == b"%PDF", "Hillstrom figure is not PDF")
+    for name in (
+        "figure_03_hillstrom_moment_contrast.pdf",
+        "figure_03_hillstrom_moment_contrast_jns.pdf",
+    ):
+        figure = directory / name
+        audit.require(figure.is_file(), f"Hillstrom figure is missing: {name}")
+        if figure.is_file():
+            audit.require(
+                figure.read_bytes()[:4] == b"%PDF",
+                f"Hillstrom figure is not PDF: {name}",
+            )
 
 
 def png_dimensions(path: Path) -> tuple[int, int] | None:
@@ -306,7 +358,7 @@ def compare_simulation(audit: Audit, generated: Path) -> None:
         audit.require(actual.is_file(), f"Generated simulation file is missing: {name}")
         if actual.is_file():
             audit.require(
-                digest(actual) == digest(expected / name),
+                csv_table(actual) == csv_table(expected / name),
                 f"Generated simulation values differ: {name}",
             )
     for name in SIMULATION_FIGURES:
@@ -326,7 +378,7 @@ def compare_hillstrom(audit: Audit, generated: Path) -> None:
         audit.require(actual.is_file(), f"Generated Hillstrom file is missing: {name}")
         if actual.is_file():
             audit.require(
-                digest(actual) == digest(expected / name),
+                csv_table(actual) == csv_table(expected / name),
                 f"Generated Hillstrom values differ: {name}",
             )
     figure = generated / "figure_03_hillstrom_moment_contrast.pdf"

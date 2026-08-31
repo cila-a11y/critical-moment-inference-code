@@ -63,6 +63,7 @@ for file in \
   table_03_root_inference.csv \
   table_04_special_power.csv \
   table_05_tail_strata.csv \
+  table_07_ablation.csv \
   figure_01_tangency_contraction.png \
   figure_02_two_root_power.png
 do

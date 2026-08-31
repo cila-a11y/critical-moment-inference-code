@@ -1,5 +1,6 @@
 SHELL := bash
 CPUS ?= 2
+# Replication-level asset stored in GitHub release v1.0.0; see README.md.
 ASSET ?= main_final_v003_replication_results.rds
 DATA ?= data/hillstrom_2008_raw.csv
 SOURCE ?=
