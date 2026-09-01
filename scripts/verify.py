@@ -9,6 +9,7 @@ import hashlib
 import re
 import struct
 import sys
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 
@@ -45,6 +46,12 @@ HILLSTROM_FILES = (
     # Frozen pipeline filename; this is manuscript Table 8.
     "table_06_hillstrom_application.csv",
 )
+VERIFIED_HILLSTROM_AUDIT_FILES = (
+    "verified_numerical_audit_summary.csv",
+    "verified_numerical_audit_anchors.csv",
+)
+HILLSTROM_NUMERIC_TOLERANCE = Decimal("1e-11")
+SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 
 BANNED_PATTERNS = (
     (re.compile(rb"/(?:projects|home)/", re.IGNORECASE), "absolute cluster path"),
@@ -92,6 +99,138 @@ def csv_table(path: Path) -> tuple[tuple[str, ...], list[dict[str, str]]]:
         reader = csv.DictReader(handle)
         rows = list(reader)
         return tuple(reader.fieldnames or ()), rows
+
+
+def finite_decimal(text: str | None) -> Decimal | None:
+    try:
+        value = Decimal(text)
+    except (InvalidOperation, TypeError, ValueError):
+        return None
+    return value if value.is_finite() else None
+
+
+def csv_difference(
+    actual: Path,
+    expected: Path,
+    tolerance: Decimal = HILLSTROM_NUMERIC_TOLERANCE,
+) -> str | None:
+    actual_fields, actual_rows = csv_table(actual)
+    expected_fields, expected_rows = csv_table(expected)
+    if actual_fields != expected_fields:
+        return "columns differ"
+    if len(actual_rows) != len(expected_rows):
+        return "row counts differ"
+    for row_number, (actual_row, expected_row) in enumerate(
+        zip(actual_rows, expected_rows), start=2
+    ):
+        for field in expected_fields:
+            actual_value = actual_row[field]
+            expected_value = expected_row[field]
+            if actual_value == expected_value:
+                continue
+            actual_number = finite_decimal(actual_value)
+            expected_number = finite_decimal(expected_value)
+            if actual_number is None or expected_number is None:
+                return f"row {row_number}, column {field} differs textually"
+            scale = max(Decimal(1), abs(actual_number), abs(expected_number))
+            if abs(actual_number - expected_number) > tolerance * scale:
+                return f"row {row_number}, column {field} differs numerically"
+    return None
+
+
+def valid_rng_state_table(path: Path) -> bool:
+    fields, rows = csv_table(path)
+    return (
+        fields == ("state", "sha256")
+        and [row["state"] for row in rows] == ["initial", "final"]
+        and all(
+            isinstance(row["sha256"], str)
+            and SHA256_PATTERN.fullmatch(row["sha256"])
+            for row in rows
+        )
+    )
+
+
+def nested_manifest_entries(
+    audit: Audit, manifest: Path, base: Path, label: str
+) -> dict[str, str]:
+    audit.require(manifest.is_file(), f"{label} is missing")
+    if not manifest.is_file():
+        return {}
+    entries: dict[str, str] = {}
+    pattern = re.compile(r"^([0-9a-f]{64})  (.+)$")
+    for line in manifest.read_text(encoding="utf-8").splitlines():
+        match = pattern.fullmatch(line)
+        audit.require(match is not None, f"Malformed {label} line: {line}")
+        if not match:
+            continue
+        relative = match.group(2)
+        safe = not relative.startswith("/") and ".." not in Path(relative).parts
+        audit.require(safe, f"Unsafe {label} path: {relative}")
+        audit.require(relative not in entries, f"Duplicate {label} path: {relative}")
+        entries[relative] = match.group(1)
+        target = base / relative
+        audit.require(target.is_file(), f"Missing file locked by {label}: {relative}")
+        if target.is_file():
+            audit.require(
+                digest(target) == match.group(1),
+                f"SHA-256 mismatch in {label}: {relative}",
+            )
+    return entries
+
+
+def verify_internal_source_locks(audit: Audit) -> None:
+    simulation = ROOT / "simulation"
+    engine_manifest = simulation / "SOURCE_SHA256.txt"
+    nested_manifest_entries(
+        audit, engine_manifest, simulation, "simulation/SOURCE_SHA256.txt"
+    )
+
+    application = ROOT / "application"
+    nested_manifest_entries(
+        audit,
+        application / "DESIGN_LOCK_SHA256.txt",
+        application,
+        "application/DESIGN_LOCK_SHA256.txt",
+    )
+    nested_manifest_entries(
+        audit,
+        application / "SOURCE_MANIFEST_SHA256.txt",
+        application,
+        "application/SOURCE_MANIFEST_SHA256.txt",
+    )
+
+    config_path = application / "config" / "application_v001.R"
+    config = config_path.read_text(encoding="utf-8") if config_path.is_file() else ""
+    engine_match = re.search(
+        r"engine\s*=\s*list\((.*?)\n\s*\),\n\s*data\s*=", config, re.DOTALL
+    )
+    audit.require(engine_match is not None, "Application engine lock is malformed")
+    if engine_match is None:
+        return
+    engine = engine_match.group(1)
+
+    def locked_value(field: str) -> str | None:
+        match = re.search(rf'{field}\s*=\s*"([^"]+)"', engine)
+        return match.group(1) if match else None
+
+    audit.require(
+        locked_value("version")
+        == (simulation / "VERSION").read_text(encoding="utf-8").strip(),
+        "Application engine version lock changed",
+    )
+    audit.require(
+        locked_value("manifest_sha256") == digest(engine_manifest),
+        "Application engine source-manifest lock changed",
+    )
+    audit.require(
+        locked_value("common_r_sha256") == digest(simulation / "R" / "common.R"),
+        "Application common.R lock changed",
+    )
+    audit.require(
+        locked_value("method_r_sha256") == digest(simulation / "R" / "method.R"),
+        "Application method.R lock changed",
+    )
 
 
 def manifest_entries(audit: Audit) -> dict[str, str]:
@@ -268,7 +407,7 @@ def verify_simulation(audit: Audit) -> None:
 
 def verify_hillstrom(audit: Audit) -> None:
     directory = ROOT / "results" / "hillstrom"
-    for name in HILLSTROM_FILES:
+    for name in HILLSTROM_FILES + VERIFIED_HILLSTROM_AUDIT_FILES:
         audit.require((directory / name).is_file(), f"Missing Hillstrom result: {name}")
     summary = csv_rows(directory / "application_summary.csv")
     audit.require(len(summary) == 1, "Hillstrom summary must have one row")
@@ -304,6 +443,8 @@ def verify_hillstrom(audit: Audit) -> None:
         "bootstrap_suprema.csv": 9999,
         "audit_checks.csv": 3,
         "rng_state_hashes.csv": 2,
+        "verified_numerical_audit_summary.csv": 1,
+        "verified_numerical_audit_anchors.csv": 6,
         "table_06_hillstrom_application.csv": 8,
     }
     for name, count in expected_rows.items():
@@ -331,6 +472,83 @@ def verify_hillstrom(audit: Audit) -> None:
         [int(row["replication"]) for row in bootstrap] == list(range(1, 10000)),
         "Hillstrom bootstrap indices changed",
     )
+    rng_states = directory / "rng_state_hashes.csv"
+    if rng_states.is_file():
+        audit.require(
+            valid_rng_state_table(rng_states),
+            "Hillstrom RNG-state audit is malformed",
+        )
+    verified_summary = csv_rows(
+        directory / "verified_numerical_audit_summary.csv"
+    )
+    audit.require(
+        len(verified_summary) == 1,
+        "Verified Hillstrom audit summary must have one row",
+    )
+    if len(verified_summary) == 1:
+        row = verified_summary[0]
+        expected = {
+            "audit_id": "hillstrom_verified_numerics_v001",
+            "source_sha256": (
+                "0e5893329d8b93cefecc571777672028290ab69865718020c78c7284f291aece"
+            ),
+            "critical_value": "2.22823852982312",
+            "precision_bits": "256",
+            "cells": "4000",
+            "n_x": "21306",
+            "n_y": "21307",
+            "accuracy_target": "0.1",
+            "accuracy_target_met": "TRUE",
+            "positive_cells": "4000",
+            "outer_cells": "0",
+        }
+        audit.require(
+            all(row.get(key) == value for key, value in expected.items()),
+            "Verified Hillstrom audit summary changed",
+        )
+        guard_ratio = finite_decimal(row.get("certified_guard_ratio_lower", ""))
+        variance_lower = finite_decimal(row.get("certified_variance_lower", ""))
+        enclosure_excess = finite_decimal(row.get("enclosure_excess_upper", ""))
+        accuracy_target = finite_decimal(row.get("accuracy_target", ""))
+        band_lower = finite_decimal(row.get("minimum_whole_cell_lower_bound", ""))
+        audit.require(
+            guard_ratio is not None and guard_ratio > Decimal("1e-12"),
+            "Verified Hillstrom guard margin is not positive",
+        )
+        audit.require(
+            variance_lower is not None and variance_lower > 0,
+            "Verified Hillstrom variance lower bound is not positive",
+        )
+        audit.require(
+            enclosure_excess is not None
+            and accuracy_target is not None
+            and enclosure_excess <= accuracy_target,
+            "Verified Hillstrom accuracy target failed",
+        )
+        audit.require(
+            band_lower is not None and band_lower > 0,
+            "Verified Hillstrom band is not uniformly positive",
+        )
+    verified_anchors = csv_rows(
+        directory / "verified_numerical_audit_anchors.csv"
+    )
+    audit.require(
+        [row["order"] for row in verified_anchors]
+        == ["0.25", "0.50", "0.75", "1.00", "1.25", "1.50"],
+        "Verified Hillstrom anchor orders changed",
+    )
+    anchors_valid = True
+    for row in verified_anchors:
+        lower = finite_decimal(row.get("lower", ""))
+        upper = finite_decimal(row.get("upper", ""))
+        anchors_valid = anchors_valid and (
+            lower is not None
+            and upper is not None
+            and lower > 0
+            and upper >= lower
+            and row.get("sign") == "positive"
+        )
+    audit.require(anchors_valid, "A verified Hillstrom anchor is invalid")
     for name in (
         "figure_03_hillstrom_moment_contrast.pdf",
         "figure_03_hillstrom_moment_contrast_jns.pdf",
@@ -377,10 +595,22 @@ def compare_hillstrom(audit: Audit, generated: Path) -> None:
         actual = generated / name
         audit.require(actual.is_file(), f"Generated Hillstrom file is missing: {name}")
         if actual.is_file():
-            audit.require(
-                csv_table(actual) == csv_table(expected / name),
-                f"Generated Hillstrom values differ: {name}",
-            )
+            if name == "rng_state_hashes.csv":
+                # R serialization version 3 records native-encoding metadata,
+                # so byte hashes of the same integer RNG state are not portable
+                # across locales. The post-run contract checks these hashes
+                # within a run; cross-system reproduction is established by the
+                # 9,999 indexed bootstrap suprema and all derived outputs.
+                audit.require(
+                    valid_rng_state_table(actual),
+                    "Generated Hillstrom RNG-state audit is malformed",
+                )
+            else:
+                difference = csv_difference(actual, expected / name)
+                audit.require(
+                    difference is None,
+                    f"Generated Hillstrom values differ: {name} ({difference})",
+                )
     figure = generated / "figure_03_hillstrom_moment_contrast.pdf"
     audit.require(figure.is_file(), "Generated Hillstrom figure is missing")
     if figure.is_file():
@@ -395,6 +625,7 @@ def main() -> int:
 
     audit = Audit()
     verify_manifest_and_privacy(audit)
+    verify_internal_source_locks(audit)
     verify_simulation(audit)
     verify_hillstrom(audit)
     if args.compare_simulation:

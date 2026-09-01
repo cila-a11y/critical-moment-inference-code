@@ -4,7 +4,7 @@ list(
   design_status = "locked_before_canonical_run",
   engine = list(
     version = "2.0.0-bridge.8.1",
-    manifest_sha256 = "5cdf653d8db1ab2ed59f9f1a02fb83459bf75bd3d042939ddb76fcd755da8182",
+    manifest_sha256 = "036bd1dc6f1599d1f90d501f8dbd5e86c61be4b9c318e92d2406f87e697013e7",
     common_r_sha256 = "98f66209fa0e90834741261fe7d9597fe534335a055463e029e154381a074cf5",
     method_r_sha256 = "d12fae4433ba57efb3d1d49a86ea2abcdd35f971b01920bb8d057b41f0efde63"
   ),

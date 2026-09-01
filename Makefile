@@ -5,7 +5,7 @@ ASSET ?= main_final_v003_replication_results.rds
 DATA ?= data/hillstrom_2008_raw.csv
 SOURCE ?=
 
-.PHONY: verify verify-depth rebuild reproduce reproduce-depth simulate data hillstrom figure3-jns
+.PHONY: verify verify-depth rebuild reproduce reproduce-depth simulate data hillstrom audit-hillstrom figure3-jns
 
 verify:
 	python3 scripts/verify.py
@@ -31,6 +31,9 @@ data:
 
 hillstrom:
 	bash scripts/run_hillstrom.sh "$(DATA)"
+
+audit-hillstrom:
+	bash scripts/audit_hillstrom_numerics.sh "$(DATA)"
 
 figure3-jns:
 	mkdir -p generated/jns_figure03/figures

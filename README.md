@@ -13,6 +13,10 @@ certification for critical moment orders*.
 - `curl` only for downloading the Hillstrom data.
 - GitHub CLI only for the one-line release-asset download shown below.
 
+The verified Hillstrom numerical audit additionally requires a C11 compiler
+and the MPFR and GMP development headers and libraries. Its supported target
+is Linux, WSL, or a Linux container; native Windows is not supported.
+
 The analysis uses base and recommended R packages only.
 
 ## Verify the public package
@@ -106,9 +110,14 @@ the frozen results under `results/simulation/enclosure_depth_v001/`.
 
 ## Reproduce Table 8 and Figure 3
 
-The Hillstrom CSV is not redistributed because no formal upstream
-redistribution licence was located. The acquisition script downloads or
-accepts only the exact locked file: 3,964,977 bytes with SHA-256
+The Hillstrom CSV was released with the
+[2008 MineThatData E-Mail Analytics Challenge](https://blog.minethatdata.com/2008/03/minethatdata-e-mail-analytics-and-data.html).
+It is not redistributed here because no formal upstream redistribution licence
+was located. Because the original download URL is no longer available, the
+acquisition script uses a
+[commit-pinned public archival copy](https://github.com/AdityaDabrase/ab-testing-email-marketing/blob/5866d7e8b50f46239c80d0ffa543fda501939ecc/data/raw/hillstrom.csv).
+It downloads or accepts only the exact locked original file: 3,964,977 bytes
+with SHA-256
 `0e5893329d8b93cefecc571777672028290ab69865718020c78c7284f291aece`.
 
 ```sh
@@ -116,16 +125,48 @@ make data
 make hillstrom
 ```
 
-If the upstream server cannot be validated by the local TLS trust store, place
-the official file at `data/hillstrom_2008_raw.csv`; `make hillstrom` still
-requires the locked byte count and SHA-256 before any computation.
+Alternatively, place the original file at `data/hillstrom_2008_raw.csv`;
+`make hillstrom` still requires the locked byte count and SHA-256 before any
+computation.
 
 The application compares the `No E-Mail` and `Mens E-Mail` groups, runs the
 locked 9,999-repetition simultaneous multiplier procedure, reconstructs the
 continuum enclosure, and checks the generated scientific files against the
 committed references in `results/hillstrom/`.
+Numeric CSV fields are compared at the same relative tolerance of `1e-11`
+used by the independent R post-run contract; schemas, row order, replication
+indices, and categorical conclusions must agree exactly. RNG-state hashes are
+checked within each run because R's version-3 serialisation records
+locale-dependent encoding metadata; cross-system reproduction is checked
+through all 9,999 indexed bootstrap suprema and the derived outputs.
 The stable pipeline file `table_06_hillstrom_application.csv` contains the
-source values for manuscript Table 8.
+descriptive and implemented-band values for manuscript Table 8. The verified
+whole-cell column is supplied by
+`verified_numerical_audit_anchors.csv`.
+
+### Run the verified 4,000-cell numerical audit
+
+After placing the locked Hillstrom CSV at `data/hillstrom_2008_raw.csv`, run:
+
+```sh
+make audit-hillstrom
+```
+
+This is separate from `make hillstrom`: it does not rerun the multiplier
+bootstrap or require R. It derives the critical value from the 9,999 committed
+multiplier suprema, compiles the interval-arithmetic audit, and checks all
+4,000 cells at 256-bit MPFR precision with directed rounding. The generated
+summary and six Table 8 anchors are compared byte for byte with
+`results/hillstrom/verified_numerical_audit_summary.csv` and
+`results/hillstrom/verified_numerical_audit_anchors.csv`.
+The recorded decimal endpoints are rounded outwards from the directed MPFR
+enclosures.
+
+On Debian or Ubuntu, the additional packages are `build-essential`,
+`libmpfr-dev`, `libgmp-dev`, and `pkg-config`. For a non-system installation,
+set both `CMO_MPFR_INCLUDEDIR` and `CMO_MPFR_LIBDIR` to its include and library
+directories. The audit first verifies the locked Hillstrom byte count and
+SHA-256; the raw data are not redistributed.
 
 ### Rebuild the manuscript-specific Figure 3
 

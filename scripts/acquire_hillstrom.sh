@@ -6,7 +6,7 @@ DESTINATION="${1:-$ROOT/data/hillstrom_2008_raw.csv}"
 LOCAL_SOURCE="${2:-}"
 EXPECTED_BYTES="3964977"
 EXPECTED_SHA256="0e5893329d8b93cefecc571777672028290ab69865718020c78c7284f291aece"
-HTTPS_URL="https://www.minethatdata.com/Kevin_Hillstrom_MineThatData_E-MailAnalytics_DataMiningChallenge_2008.03.20.csv"
+HTTPS_URL="https://raw.githubusercontent.com/AdityaDabrase/ab-testing-email-marketing/5866d7e8b50f46239c80d0ffa543fda501939ecc/data/raw/hillstrom.csv"
 
 command -v sha256sum >/dev/null 2>&1 || {
   echo "GNU sha256sum is required." >&2
